@@ -1,6 +1,7 @@
 import csv
 import json
 from pathlib import Path
+import sqlite3
 
 import pytest
 
@@ -120,6 +121,20 @@ def test_unknown_truth_target_is_rejected(tmp_path):
     write_tsv(tmp_path/'data'/'train'/'train_ground_truth.tsv',TRUTH_HEADER,[['S1-x','S2-missing']])
     with pytest.raises(ValueError,match='ground truth'):
         prepare(tmp_path/'data',tmp_path/'run','train',{'seed':2026})
+
+
+def test_prepare_recovers_unfinished_database(completed_run, tmp_path):
+    data, _, cfg, _ = completed_run
+    destination = tmp_path/'prepared'/'test'
+    destination.mkdir(parents=True)
+    (destination/'records.sqlite.tmp').write_bytes(b'interrupted incomplete database')
+    result = prepare(data, tmp_path, 'test', cfg)
+    assert result['counts']['S1'] == 4
+    assert not (destination/'records.sqlite.tmp').exists()
+    verify(destination)
+    with sqlite3.connect(destination/'records.sqlite') as con:
+        assert con.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'
+        assert con.execute('SELECT COUNT(*) FROM records WHERE source=1').fetchone()[0] == 4
 
 
 def test_strict_validation_catches_candidate_provenance(completed_run):

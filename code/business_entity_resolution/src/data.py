@@ -61,6 +61,13 @@ def prepare(data_dir, run_dir, split, cfg):
     if tmp.exists():
         tmp.unlink()
     con = connect(tmp, readonly=False)
+    # This database is disposable until the final rename and manifest. A failed
+    # build restarts from the TSVs, so per-batch disk journals/fsyncs buy no recovery
+    # and are very expensive on rotational scratch disks. Keep read-worker caches
+    # small, but give this single writer enough cache for the growing ID indexes.
+    con.execute('PRAGMA journal_mode=MEMORY')
+    con.execute('PRAGMA synchronous=OFF')
+    con.execute('PRAGMA cache_size=-524288')  # 512 MiB; writer only.
     con.executescript('''
       CREATE TABLE records(rid INTEGER PRIMARY KEY, id TEXT NOT NULL UNIQUE,
         source INTEGER NOT NULL, country TEXT NOT NULL, name TEXT, address TEXT,
@@ -115,6 +122,10 @@ def prepare(data_dir, run_dir, split, cfg):
         con.commit()
     finally:
         con.close()
+    # Flush the completed database before publishing it. Interrupted builds have
+    # no completion manifest and are discarded on the next invocation.
+    with tmp.open('rb') as database_file:
+        os.fsync(database_file.fileno())
     os.replace(tmp, out/'records.sqlite')
     result = complete(out, key, [out/'records.sqlite'], inputs=inputs, counts=counts, seconds=time.monotonic()-started)
     log(f'prepared {split}: {counts}')
