@@ -1,0 +1,39 @@
+{
+  "seed": 2026,
+  "workers": 1,
+  "batch_size": 200,
+  "index": {
+    "threads": 1,
+    "heap_mb": 32
+  },
+  "retrieval": {
+    "raw_hits": 32,
+    "per_source_limit": 32,
+    "tokens_per_field": 12,
+    "selection": "adaptive_v1",
+    "search_mode": "shared"
+  },
+  "samples": {
+    "train": 0,
+    "dev": 0,
+    "threshold": 0,
+    "eval": 0
+  },
+  "model": {
+    "task_type": "CPU",
+    "thread_count": 2,
+    "iterations": 100,
+    "depth": 5,
+    "learning_rate": 0.1,
+    "l2_leaf_reg": 5,
+    "border_count": 64,
+    "early_stopping_rounds": 20
+  },
+  "threshold": {
+    "tie_tolerance": 0.0002,
+    "country_weights": {
+      "US": 0.45015,
+      "India": 0.54985
+    }
+  }
+}

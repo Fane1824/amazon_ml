@@ -1,0 +1,14 @@
+{
+  "seed": 2026,
+  "workers": 4,
+  "batch_size": 1000,
+  "index": {"threads": 4, "heap_mb": 256},
+  "retrieval": {"raw_hits": 32, "per_source_limit": 12, "tokens_per_field": 12},
+  "samples": {"train": 100000, "dev": 10000, "threshold": 20000, "eval": 20000},
+  "model": {
+    "task_type": "CPU", "thread_count": 4,
+    "iterations": 1500, "depth": 6, "learning_rate": 0.05,
+    "l2_leaf_reg": 5, "border_count": 128, "early_stopping_rounds": 100
+  },
+  "threshold": {"tie_tolerance": 0.0002, "country_weights": {"US": 0.45015, "India": 0.54985}}
+}
